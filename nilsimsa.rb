@@ -53,7 +53,8 @@ class Nilsimsa
   end
 
   def tran3(a,b,c,n)
-    (((TRAN[(a+n)&255]^TRAN[b]*(n+n+1))+TRAN[(c)^TRAN[n]])&255)
+    (((TRAN[(a+n)&255].bytes.first^TRAN[b].bytes.first*(n+n+1))+TRAN[(c)^TRAN[n].bytes.first].bytes.first)&255)
+    #(((TRAN[(a+n)&255]^TRAN[b]*(n+n+1))+TRAN[(c)^TRAN[n]])&255)
   end
 
   def update(data)
@@ -83,19 +84,20 @@ class Nilsimsa
   def digest
     @total=0;
     case @count
-      when 0..2:
-      when 3   : @total +=1
-      when 4   : @total +=4
+      when 0..2 then
+      when 3 then @total +=1
+      when 4 then @total +=4
       else     
         @total +=(8*@count)-28    
     end
     @threshold=@total/256	
 
-    @code=String::new(
+    @code=
            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" <<
-           "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+           "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     (0..255).each do |i|
-      @code[i>>3]+=( ((@acc[i]>@threshold)?(1):(0))<<(i&7) )
+      @code[i>>3] = (@code[i>>3].bytes.first + ( ((@acc[i]>@threshold)?(1):(0))<<(i&7) )).chr
+      #@code[i>>3] += ( ((@acc[i]>@threshold)?(1):(0))<<(i&7) )
     end
 
     @code[0..31].reverse
@@ -126,22 +128,29 @@ class Nilsimsa
   def nilsimsa(otherdigest)
     bits=0; myd=digest
     (0..31).each do |i|
-      bits += POPC[255&myd[i]^otherdigest[i]]
+      bits += POPC[255&myd[i].bytes.first^otherdigest[i].bytes.first].bytes.first
     end
     (128-bits)
   end
   
 end
 
-def selftest
+def selftest  
   n1 = Nilsimsa::new;
   n1.update("abcdefgh")
+  puts "#{n1.hexdigest}\r\n14c8118000000000030800000004042004189020001308014088003280000078"
   puts "abcdefgh:  #{n1.hexdigest=='14c8118000000000030800000004042004189020001308014088003280000078'}"
   n2 = Nilsimsa::new("abcd","efgh")
+  puts "#{n2.hexdigest}\r\n14c8118000000000030800000004042004189020001308014088003280000078"
   puts "abcd efgh: #{n2.hexdigest=='14c8118000000000030800000004042004189020001308014088003280000078'}"
+
+  puts "#{n1}\r\n#{n2}"
   puts "digest:    #{n1 == n2.digest}"
+
   n1.update("ijk")
+  puts "#{n1.hexdigest}\r\n14c811840010000c0328200108040630041890200217582d4098103280000078"
   puts "ijk:       #{n1.hexdigest=='14c811840010000c0328200108040630041890200217582d4098103280000078'}"
+  puts "#{n1.nilsimsa(n2.digest)}==109"
   puts "nilsimsa:  #{n1.nilsimsa(n2.digest)==109}"
   puts
 end
