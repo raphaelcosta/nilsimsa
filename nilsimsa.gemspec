@@ -1,4 +1,4 @@
-SPEC = Gem::Specification.new do |spec|
+Gem::Specification.new do |spec|
   # Descriptive and source information for this gem.
   spec.name = "nilsimsa"
   spec.version = "1.0.6"
