@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.files = %w(README nilsimsa.gemspec nilsimsa.rb bin/nilsimsa
                   examples/simple.rb ext/extconf.rb ext/nilsimsa.c)
   spec.executables = ['nilsimsa']
+  spec.require_paths = ["lib"]
 
   # optional native component
   spec.extensions = ['ext/extconf.rb']
